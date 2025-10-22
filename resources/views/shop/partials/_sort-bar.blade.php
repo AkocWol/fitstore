@@ -1,9 +1,10 @@
-<form method="GET" class="d-flex gap-2">
-  <select name="sort" class="form-select form-select-sm">
-    <option value="">Sort</option>
-    <option value="newest" @selected(request('sort')==='newest')>Newest</option>
-    <option value="price_asc" @selected(request('sort')==='price_asc')>Price ↑</option>
-    <option value="price_desc" @selected(request('sort')==='price_desc')>Price ↓</option>
+<form class="d-flex gap-2" x-on:submit.prevent="$store.shop.apply()">
+  <select name="sort" class="form-select form-select-sm"
+          x-model="$store.shop.state.sort" x-on:change="$store.shop.apply()">
+    <option value="newest">Newest</option>
+    <option value="price_asc">Price Low → High </option>
+    <option value="price_desc">Price High → Low </option>
+    <option value="name_asc">Name A–Z</option>
+    <option value="name_desc">Name Z–A</option>
   </select>
-  <button class="btn btn-outline-secondary btn-sm">Apply</button>
 </form>
