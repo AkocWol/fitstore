@@ -11,10 +11,12 @@
 
     <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
       {{-- TODO: vervang url naar je echte add-to-cart route als je die hebt --}}
-      <form method="POST" action="{{ url('/cart/add') }}">
+      <form method="POST" action="{{ route('cart.add') }}">
         @csrf
         <input type="hidden" name="product_id" value="{{ $product->id }}">
-        <button class="btn btn-primary btn-sm">
+        <button class="btn btn-primary btn-sm"
+                data-bs-toggle="modal"
+                data-bs-target="#quickAdd{{ $product->id }}">
           <i class="bi bi-cart-plus me-1"></i> Add
         </button>
       </form>

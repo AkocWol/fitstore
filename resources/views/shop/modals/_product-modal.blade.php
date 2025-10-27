@@ -23,15 +23,17 @@
       </div>
 
       <div class="modal-footer">
-        <form method="POST" action="{{ url('/cart/add') }}">
-          @csrf
-          <input type="hidden" name="product_id" value="{{ $product->id }}">
-          <button class="btn btn-primary">
-            <i class="bi bi-cart-plus me-1"></i> Add to Cart
-          </button>
-        </form>
-        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
+  <form method="POST" action="{{ route('cart.add') }}">
+    @csrf
+    <input type="hidden" name="product_id" value="{{ $product->id }}">
+    <input type="hidden" name="qty" value="1">
+    <button class="btn btn-primary">
+      <i class="bi bi-cart-plus me-1"></i> Add to Cart
+    </button>
+  </form>
+  <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+</div>
+
 
     </div>
   </div>

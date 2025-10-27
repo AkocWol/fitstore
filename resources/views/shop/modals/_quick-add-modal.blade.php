@@ -1,10 +1,11 @@
 @php($id = $product['id'] ?? ($product->id ?? uniqid()))
 <div class="modal fade" id="quickAdd{{ $id }}" tabindex="-1" aria-labelledby="quickAddLabel{{ $id }}" aria-hidden="true">
   <div class="modal-dialog">
-    <form class="modal-content" method="POST" action="{{ url('/cart/add') }}">
+    <form class="modal-content" method="POST" action="{{ route('cart.add') }}">
       @csrf
       <div class="modal-header">
-        <h5 class="modal-title" id="quickAddLabel{{ $id }}">Quick Add: {{ $product['name'] ?? 'Product' }}</h5>
+        <h5 class="modal-title" id="quickAddLabel{{ $id }}">Quick Add: {{ $product['name'] ?? $product->name ?? 'Product' }}</h5>
+
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">

@@ -43,6 +43,40 @@
     </section>
   </div>
 </div>
+
+{{-- === Product Modal (staat één keer op de pagina) === --}}
+<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title" id="productModalLabel">Product</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <h6 class="mb-0" id="pm-name">—</h6>
+          <span class="badge bg-primary-subtle text-primary-emphasis" id="pm-price">€0,00</span>
+        </div>
+        <p class="mb-3 text-secondary" id="pm-description">—</p>
+        {{-- Placeholder afbeelding (optioneel) --}}
+        <img id="pm-image" src="" alt="" class="img-fluid rounded d-none">
+      </div>
+
+      <div class="modal-footer justify-content-between">
+        <form method="POST" action="{{ route('cart.add') }}" class="d-flex align-items-center gap-2">
+          @csrf
+          <input type="hidden" name="product_id" id="pm-product-id" value="">
+          <label class="form-label mb-0 small">Qty</label>
+          <input type="number" name="qty" class="form-control form-control-sm" value="1" min="1" style="width:80px;">
+          <button type="submit" class="btn btn-primary btn-sm">Add to cart</button>
+        </form>
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 @endsection
 
 
@@ -121,4 +155,40 @@ document.addEventListener('alpine:init', () => {
   });
 });
 </script>
+
+<script>
+  // Werkt ook na AJAX omdat we op document luisteren
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-product-view]');
+    if (!btn) return;
+
+    const name  = btn.getAttribute('data-name') || '—';
+    const price = btn.getAttribute('data-price') || '0,00';
+    const desc  = btn.getAttribute('data-description') || '—';
+    const id    = btn.getAttribute('data-id') || '';
+    const img   = btn.getAttribute('data-image') || '';
+
+    const modalEl = document.getElementById('productModal');
+    modalEl.querySelector('#productModalLabel').textContent = name;
+    modalEl.querySelector('#pm-name').textContent = name;
+    modalEl.querySelector('#pm-price').textContent = '€' + price;
+    modalEl.querySelector('#pm-description').textContent = desc;
+    modalEl.querySelector('#pm-product-id').value = id;
+
+    const imgEl = modalEl.querySelector('#pm-image');
+    if (img) {
+      imgEl.src = img;
+      imgEl.alt = name;
+      imgEl.classList.remove('d-none');
+    } else {
+      imgEl.classList.add('d-none');
+      imgEl.removeAttribute('src');
+      imgEl.removeAttribute('alt');
+    }
+
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+  });
+</script>
+
 @endpush

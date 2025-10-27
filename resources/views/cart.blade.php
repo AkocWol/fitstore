@@ -1,110 +1,79 @@
 @extends('layouts.app')
-
-@section('title', 'Your Cart')
+@section('title', 'Cart')
 
 @section('content')
 <div class="container py-5">
+  <h1 class="fw-bold mb-4">Your Cart</h1>
 
-  {{-- Header --}}
-  <div class="text-center mb-4">
-    <h1 class="fw-bold">Your Shopping Cart</h1>
-    <p class="text-muted">Review your selected items before checkout.</p>
-  </div>
+  {{-- Meldingen --}}
+  @if(session('success'))
+    <div class="alert alert-success">{{ session('success') }}</div>
+  @endif
+  @if(session('error'))
+    <div class="alert alert-danger">{{ session('error') }}</div>
+  @endif
 
-  {{-- Cart Table --}}
-  <div class="table-responsive mb-4">
-    <table class="table align-middle text-center">
-      <thead class="table-light">
-        <tr>
-          <th scope="col">Product</th>
-          <th scope="col">Price</th>
-          <th scope="col">Quantity</th>
-          <th scope="col">Total</th>
-          <th scope="col"></th>
-        </tr>
-      </thead>
-      <tbody>
-        {{-- Example items (you can later make this dynamic) --}}
-        <tr>
-          <td class="text-start">
-            <div class="d-flex align-items-center">
-              <img src="https://picsum.photos/seed/cart1/80/80" alt="Vitamin Boost" class="rounded me-3">
-              <div>
-                <div class="fw-semibold">Vitamin Boost</div>
-                <small class="text-muted">Daily multivitamins</small>
-              </div>
-            </div>
-          </td>
-          <td>€12.99</td>
-          <td>
-            <input type="number" class="form-control text-center" value="1" min="1" style="width: 80px;">
-          </td>
-          <td>€12.99</td>
-          <td>
-            <button class="btn btn-outline-danger btn-sm">
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>
-        </tr>
+  @if(empty($cart))
+    <div class="alert alert-info">Je winkelwagen is leeg.</div>
+    <a href="{{ route('shop') }}" class="btn btn-primary">Verder winkelen</a>
+  @else
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th style="width:80px;"></th>
+            <th>Product</th>
+            <th class="text-end">Prijs</th>
+            <th style="width:120px;">Aantal</th>
+            <th class="text-end">Subtotaal</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        @foreach($cart as $line)
+          <tr>
+            <td>
+              @if(!empty($line['image']))
+                <img src="{{ $line['image'] }}" alt="{{ $line['name'] }}" class="img-fluid rounded" style="width:72px;height:72px;object-fit:cover;">
+              @endif
+            </td>
+            <td>{{ $line['name'] }}</td>
+            <td class="text-end">€{{ number_format($line['price'], 2) }}</td>
+            <td>
+              <form action="{{ route('cart.update', $line['id']) }}" method="POST" class="d-flex gap-2">
+                @csrf
+                @method('PATCH')
+                <input type="number" name="qty" value="{{ $line['qty'] }}" min="1" class="form-control form-control-sm" style="width:90px;">
+                <button class="btn btn-outline-secondary btn-sm" type="submit">Update</button>
+              </form>
+            </td>
+            <td class="text-end">€{{ number_format($line['price'] * $line['qty'], 2) }}</td>
+            <td class="text-end">
+              <form action="{{ route('cart.remove', $line['id']) }}" method="POST" onsubmit="return confirm('Verwijderen?')">
+                @csrf
+                @method('DELETE')
+                <button class="btn btn-outline-danger btn-sm">Remove</button>
+              </form>
+            </td>
+          </tr>
+        @endforeach
+        </tbody>
+      </table>
+    </div>
 
-        <tr>
-          <td class="text-start">
-            <div class="d-flex align-items-center">
-              <img src="https://picsum.photos/seed/cart2/80/80" alt="Protein Snacks" class="rounded me-3">
-              <div>
-                <div class="fw-semibold">Protein Snacks</div>
-                <small class="text-muted">High-protein healthy treats</small>
-              </div>
-            </div>
-          </td>
-          <td>€5.99</td>
-          <td>
-            <input type="number" class="form-control text-center" value="2" min="1" style="width: 80px;">
-          </td>
-          <td>€11.98</td>
-          <td>
-            <button class="btn btn-outline-danger btn-sm">
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+    <div class="d-flex justify-content-between align-items-center mt-3">
+      <form action="{{ route('cart.clear') }}" method="POST" onsubmit="return confirm('Winkelwagen legen?')">
+        @csrf
+        @method('DELETE')
+        <button class="btn btn-outline-secondary">Leeg winkelwagen</button>
+      </form>
 
-  {{-- Summary --}}
-  <div class="row justify-content-end">
-    <div class="col-md-5 col-lg-4">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <h5 class="fw-bold mb-3">Order Summary</h5>
-
-          <div class="d-flex justify-content-between">
-            <span>Subtotal</span>
-            <span>€24.97</span>
-          </div>
-          <div class="d-flex justify-content-between">
-            <span>Shipping</span>
-            <span>€2.99</span>
-          </div>
-          <hr>
-          <div class="d-flex justify-content-between fw-bold">
-            <span>Total</span>
-            <span>€27.96</span>
-          </div>
-
-          <div class="d-grid gap-2 mt-4">
-            <a href="{{ url('/shop') }}" class="btn btn-outline-secondary">
-              <i class="bi bi-arrow-left me-1"></i> Continue Shopping
-            </a>
-            <a href="{{ url('/checkout') }}" class="btn btn-primary">
-              <i class="bi bi-credit-card me-1"></i> Proceed to Checkout
-            </a>
-          </div>
-        </div>
+      <div class="text-end">
+        <div class="fw-semibold">Items: {{ $count }}</div>
+        <div class="fs-5 fw-bold">Totaal: €{{ number_format($total, 2) }}</div>
+        <a href="{{ route('checkout') }}" class="btn btn-primary mt-2">Ga naar checkout</a>
       </div>
     </div>
-  </div>
-
+  @endif
 </div>
 @endsection
