@@ -6,15 +6,37 @@
 <div class="container py-5">
   <h1 class="fw-bold mb-4">Checkout</h1>
 
+  {{-- Flash messages --}}
+  @if (session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      {{ session('success') }}
+      @if (session('paid_with'))
+        <div class="small mt-1">Betaalmethode: <strong>{{ session('paid_with') }}</strong></div>
+      @endif
+      @if (session('paid_total') !== null)
+        <div class="small">Bedrag: <strong>€{{ number_format((float)session('paid_total'), 2) }}</strong></div>
+      @endif
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  @endif
+
+  @if (session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      {{ session('error') }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  @endif
+
   @if (!count($items))
     <div class="alert alert-warning">Je cart is leeg.</div>
-    <a href="{{ url('/shop') }}" class="btn btn-outline-secondary">Terug naar shop</a>
+    <a href="{{ route('shop') }}" class="btn btn-outline-secondary">Terug naar shop</a>
   @else
     <div class="row g-4">
       <div class="col-lg-7">
         <div class="card shadow-sm border-0">
           <div class="card-body">
             <h5 class="fw-bold mb-3">Verzendadres</h5>
+
             <form method="POST" action="{{ route('checkout.place') }}">
               @csrf
               <div class="row g-3">
@@ -51,15 +73,17 @@
                     <input class="form-check-input" type="radio" name="payment" value="card" id="p2">
                     <label class="form-check-label" for="p2">Creditcard (demo)</label>
                   </div>
+                  <div class="form-text mt-1">Dit is een demo-betaling; er wordt niets echt afgeschreven.</div>
                 </div>
 
                 <div class="col-12 mt-3">
-                  <button class="btn btn-success">
+                  <button class="btn btn-success" type="submit">
                     <i class="bi bi-bag-check me-1"></i> Plaats bestelling (demo)
                   </button>
                 </div>
               </div>
             </form>
+
           </div>
         </div>
       </div>

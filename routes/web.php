@@ -101,16 +101,32 @@ Route::middleware('auth')->group(function () {
         return view('checkout', compact('items', 'total'));
     })->name('checkout');
 
-    // Checkout afronden (fictief)
-    Route::post('/checkout/place', function () {
+    // Checkout afronden (demo)
+    Route::post('/checkout/place', function (Illuminate\Http\Request $request) {
         [$items, $total] = getCartData();
         if (empty($items)) {
             return redirect()->route('shop')->with('error', 'Je winkelwagen is leeg.');
         }
 
-        // Hier zou je normaal een order opslaan, betaling starten, enz.
+        // Validate the chosen payment method
+        $data = $request->validate([
+            'payment' => ['required', 'in:ideal,card'],
+        ]);
+
+        $labels = [
+            'ideal' => 'iDEAL (demo)',
+            'card'  => 'Creditcard (demo)',
+        ];
+
+        // (In a real checkout, you'd store order info here)
         session()->forget('cart');
-        return redirect()->route('orders')->with('success', 'Je bestelling is geplaatst (demo).');
+
+        // Redirect back to checkout with success message
+        return redirect()
+            ->route('checkout')
+            ->with('success', 'Betaling geslaagd (demo).')
+            ->with('paid_with', $labels[$data['payment']] ?? 'Onbekend')
+            ->with('paid_total', $total);
     })->name('checkout.place');
 
     // Orders bekijken
