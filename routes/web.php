@@ -87,7 +87,7 @@ Route::middleware('auth')->group(function () {
         if (isset($cart[$productId])) {
             $cart[$productId] = $qty;
             session(['cart' => $cart]);
-            return back()->with('success', 'Aantal bijgewerkt.');
+            return back()->with('success', 'Amounth changed');
         }
 
         return back()->with('error', 'Product is  not anymore in the cart.');

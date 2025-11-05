@@ -72,7 +72,7 @@ class CartController extends Controller
             $request->session()->put('cart', $cart);
         }
 
-        return back()->with('success', 'Aantal bijgewerkt.');
+        return back()->with('success', 'Amounth changed.');
     }
 
     public function remove(Request $request, $id)

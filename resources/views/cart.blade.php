@@ -30,18 +30,45 @@
         <table class="table align-middle">
           <thead>
             <tr>
+              <th style="width:90px;">Photo</th>
               <th>Product</th>
               <th class="text-end">Price</th>
               <th style="width:160px;">Quantity</th>
-              <th class="text-end">Subtota</th>
+              <th class="text-end">Subtotal</th>
               <th style="width:110px;"></th>
             </tr>
           </thead>
           <tbody id="cart-body">
             @foreach ($items as $line)
+              @php
+                // Probeer image uit cart data, anders relation, anders DB lookup, anders nette fallback
+                $raw = data_get($line, 'image')
+                    ?? data_get($line, 'product.image')
+                    ?? optional(\App\Models\Product::find(data_get($line, 'id')))->image;
+
+                $isAbs  = is_string($raw) && (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://'));
+                $imgSrc = $raw
+                  ? ($isAbs ? $raw : asset('storage/' . ltrim($raw, '/')))
+                  : 'https://picsum.photos/seed/cart-'.data_get($line,'id').'/120/120';
+              @endphp
+
               <tr data-id="{{ $line['id'] }}" data-price="{{ (float)$line['price'] }}">
-                <td class="fw-semibold">{{ $line['name'] }}</td>
+                <td>
+                  <img
+                    src="{{ $imgSrc }}"
+                    alt="{{ $line['name'] }}"
+                    class="img-thumbnail"
+                    style="width:70px;height:70px;object-fit:cover;"
+                    onerror="this.onerror=null;this.src='https://placehold.co/120x120?text=No+Image';"
+                  >
+                </td>
+
+                <td class="fw-semibold">
+                  {{ $line['name'] }}
+                </td>
+
                 <td class="text-end">€{{ number_format($line['price'], 2) }}</td>
+
                 <td>
                   {{-- Progressive enhancement: werkt zonder JS, JS onderschept submit --}}
                   <form action="{{ route('cart.update') }}" method="POST" class="d-flex gap-2 js-update">
@@ -52,7 +79,9 @@
                     <button class="btn btn-outline-secondary btn-sm" type="submit">Update</button>
                   </form>
                 </td>
+
                 <td class="text-end subtotal-cell">€{{ number_format($line['subtotal'], 2) }}</td>
+
                 <td class="text-end">
                   <form action="{{ route('cart.remove') }}" method="POST" class="js-remove">
                     @csrf
@@ -68,9 +97,9 @@
       </div>
 
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mt-3 gap-3">
-        <form action="{{ route('cart.clear') }}" method="POST" onsubmit="return confirm('Winkelwagen legen?')">
+        <form action="{{ route('cart.clear') }}" method="POST" class="js-clear" onsubmit="return confirm('Winkelwagen legen?')">
           @csrf
-          <button class="btn btn-outline-secondary" type="submit">Leeg winkelwagen</button>
+          <button class="btn btn-outline-secondary" type="submit">Empty cart</button>
         </form>
 
         <div class="ms-md-auto text-end">
@@ -170,14 +199,14 @@
     const qty        = Math.max(1, parseInt(form.querySelector('input[name="qty"]').value, 10));
 
     const ok = await postForm(form.action, { product_id, qty });
-    if (!ok) return showToast('Kon aantal niet bijwerken.', 'danger');
+    if (!ok) return showToast('couldnt change Amounth changed.', 'danger');
 
     const price = parseFloat(row.dataset.price || '0');
     const subEl = row.querySelector('.subtotal-cell');
     if (subEl) subEl.textContent = money(price * qty);
 
     recalcTotal();
-    showToast('Aantal bijgewerkt.', 'success');
+    showToast('Amounth changed', 'success');
   });
 
   // Remove item (AJAX via FormData)

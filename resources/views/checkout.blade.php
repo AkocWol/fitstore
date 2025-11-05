@@ -92,17 +92,41 @@
         <div class="card shadow-sm border-0">
           <div class="card-body">
             <h5 class="fw-bold mb-3">Orderoverzicht</h5>
+
             <ul class="list-group list-group-flush mb-3">
               @foreach ($items as $it)
+                @php
+                  // Image bron: cart -> relation -> DB lookup -> fallback
+                  $raw = data_get($it, 'image')
+                      ?? data_get($it, 'product.image')
+                      ?? optional(\App\Models\Product::find(data_get($it, 'id')))->image;
+
+                  $isAbs  = is_string($raw) && (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://'));
+                  $imgSrc = $raw
+                    ? ($isAbs ? $raw : asset('storage/' . ltrim($raw, '/')))
+                    : 'https://picsum.photos/seed/checkout-'.data_get($it,'id').'/120/120';
+                @endphp
+
                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                  <div>
-                    <div class="fw-semibold">{{ $it['name'] }}</div>
-                    <small class="text-muted">Qty: {{ $it['qty'] }}</small>
+                  <div class="d-flex align-items-center">
+                    <img
+                      src="{{ $imgSrc }}"
+                      alt="{{ $it['name'] }}"
+                      class="img-thumbnail me-3"
+                      style="width:64px;height:64px;object-fit:cover;"
+                      onerror="this.onerror=null;this.src='https://placehold.co/120x120?text=No+Image';"
+                    >
+                    <div>
+                      <div class="fw-semibold">{{ $it['name'] }}</div>
+                      <small class="text-muted">Qty: {{ $it['qty'] }}</small>
+                    </div>
                   </div>
+
                   <div>€{{ number_format($it['price'] * $it['qty'], 2) }}</div>
                 </li>
               @endforeach
             </ul>
+
             <div class="d-flex justify-content-between">
               <span class="fw-semibold">Totaal</span>
               <span class="fw-bold">€{{ number_format($total, 2) }}</span>
