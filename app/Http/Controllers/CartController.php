@@ -57,7 +57,7 @@ class CartController extends Controller
         $request->session()->put('cart', $cart);
 
         return redirect()->route('cart')
-            ->with('success', "{$product->name} is toegevoegd aan je winkelwagen.");
+            ->with('success', "{$product->name} is added to the cart.");
     }
 
     public function update(Request $request, $id)

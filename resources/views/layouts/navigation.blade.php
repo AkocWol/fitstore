@@ -35,11 +35,11 @@
           </li>
 
           {{-- Checkout (alleen ingelogd) --}}
-          <li class="nav-item">
+          {{--  <li class="nav-item">
             <a class="nav-link {{ request()->is('checkout') ? 'active fw-semibold' : '' }}" href="{{ url('/checkout') }}">
               <i class="bi bi-credit-card me-1"></i> Checkout
             </a>
-          </li>
+          </li> --}}
         @endauth
       </ul>
 

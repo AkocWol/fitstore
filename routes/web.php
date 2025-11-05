@@ -6,19 +6,29 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Models\Product;
 
+// ========================
+// Public
+// ========================
+
 // Homepage
 Route::get('/', fn () => view('welcome'))->name('home');
 
 // Shop (publiek)
 Route::get('/shop', [ShopController::class, 'index'])->name('shop');
 
-// ---- CART & CHECKOUT (alleen voor ingelogde gebruikers) ----
+Route::view('/about', 'about')->name('about');
+
+// ========================
+// CART & CHECKOUT (alleen voor ingelogde gebruikers)
+// ========================
 Route::middleware('auth')->group(function () {
 
-    // Hulpfunctie om cart-data uit sessie te halen
+    // ------------------------
+    // Helper: cart-data uit sessie
+    // ------------------------
     function getCartData()
     {
-        $cart = session('cart', []);
+        $cart = session('cart', []); // [productId => qty]
         $items = [];
         $total = 0;
 
@@ -28,10 +38,10 @@ Route::middleware('auth')->group(function () {
                 $qty = $cart[$product->id];
                 $subtotal = $product->price * $qty;
                 $items[] = [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'price' => $product->price,
-                    'qty' => $qty,
+                    'id'       => $product->id,
+                    'name'     => $product->name,
+                    'price'    => $product->price,
+                    'qty'      => $qty,
                     'subtotal' => $subtotal,
                 ];
                 $total += $subtotal;
@@ -40,6 +50,10 @@ Route::middleware('auth')->group(function () {
 
         return [$items, $total];
     }
+
+    // ------------------------
+    // CART
+    // ------------------------
 
     // Cart bekijken
     Route::get('/cart', function () {
@@ -61,8 +75,23 @@ Route::middleware('auth')->group(function () {
         $cart[$productId] = ($cart[$productId] ?? 0) + $qty;
         session(['cart' => $cart]);
 
-        return redirect()->route('cart')->with('success', 'Product toegevoegd aan je winkelwagen.');
+        return redirect()->route('cart')->with('success', 'Added to cart.');
     })->name('cart.add');
+
+    // Aantal bijwerken (qty)
+    Route::post('/cart/update', function (Request $request) {
+        $productId = (int) $request->input('product_id');
+        $qty = max(1, (int) $request->input('qty', 1));
+
+        $cart = session('cart', []);
+        if (isset($cart[$productId])) {
+            $cart[$productId] = $qty;
+            session(['cart' => $cart]);
+            return back()->with('success', 'Aantal bijgewerkt.');
+        }
+
+        return back()->with('error', 'Product is  not anymore in the cart.');
+    })->name('cart.update');
 
     // Product verwijderen
     Route::post('/cart/remove', function (Request $request) {
@@ -80,32 +109,40 @@ Route::middleware('auth')->group(function () {
         return back()->with('success', 'Winkelwagen geleegd.');
     })->name('cart.clear');
 
-    // Aantal bijwerken (qty)
-    Route::post('/cart/update', function (Request $request) {
-        $productId = (int) $request->input('product_id');
-        $qty = max(1, (int) $request->input('qty', 1));
 
-        $cart = session('cart', []);
-        if (isset($cart[$productId])) {
-            $cart[$productId] = $qty;
-            session(['cart' => $cart]);
-            return back()->with('success', 'Aantal bijgewerkt.');
+    // ------------------------
+    // CHECKOUT
+    // ------------------------
+
+    // NEW: start checkout via knop (zet een sessie-vlag)
+    Route::post('/checkout/start', function () {
+        [$items, $total] = getCartData();
+        if (empty($items)) {
+            return redirect()->route('cart')->with('error', 'Your cart is empty');
+        }
+        session(['checkout_ready' => true]);
+        return redirect()->route('checkout');
+    })->name('checkout.start');
+
+    // UPDATED: Checkout alleen tonen als via de knop gestart
+    Route::get('/checkout', function () {
+        if (!session('checkout_ready')) {
+            return redirect()->route('cart')->with('error', 'Open the checkout using the button "Go to checkout".');
         }
 
-        return back()->with('error', 'Product zit niet (meer) in je winkelwagen.');
-    })->name('cart.update');
-
-    // Checkout bekijken
-    Route::get('/checkout', function () {
         [$items, $total] = getCartData();
+
+        // (Optioneel: single-use vlag — uncomment als je wilt)
+        // session()->forget('checkout_ready');
+
         return view('checkout', compact('items', 'total'));
     })->name('checkout');
 
-    // Checkout afronden (demo)
-    Route::post('/checkout/place', function (Illuminate\Http\Request $request) {
+    // UPDATED: Checkout afronden (demo) + vlag opruimen
+    Route::post('/checkout/place', function (Request $request) {
         [$items, $total] = getCartData();
         if (empty($items)) {
-            return redirect()->route('shop')->with('error', 'Je winkelwagen is leeg.');
+            return redirect()->route('shop')->with('error', 'Your cart is empty');
         }
 
         // Validate the chosen payment method
@@ -118,10 +155,11 @@ Route::middleware('auth')->group(function () {
             'card'  => 'Creditcard (demo)',
         ];
 
-        // (In a real checkout, you'd store order info here)
+        // DEMO: cart legen + toegangsvlag verwijderen
         session()->forget('cart');
+        session()->forget('checkout_ready');
 
-        // Redirect back to checkout with success message
+        // Blijf op checkout met duidelijke melding
         return redirect()
             ->route('checkout')
             ->with('success', 'Betaling geslaagd (demo).')
@@ -129,10 +167,13 @@ Route::middleware('auth')->group(function () {
             ->with('paid_total', $total);
     })->name('checkout.place');
 
-    // Orders bekijken
+    // (Laat staan, ook al gebruik je 'm nu niet)
     Route::get('/orders', fn () => view('orders'))->name('orders');
 
-    // Account (profiel)
+
+    // ------------------------
+    // ACCOUNT (profiel)
+    // ------------------------
     Route::get('/account', [ProfileController::class, 'edit'])->name('account');
     Route::patch('/account', [ProfileController::class, 'update'])->name('account.update');
     Route::delete('/account', [ProfileController::class, 'destroy'])->name('account.destroy');

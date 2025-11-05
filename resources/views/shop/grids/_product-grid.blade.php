@@ -3,28 +3,35 @@
   <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
     @foreach ($products as $product)
       @php
-        // Losse, robuuste placeholderlogica (zonder accessor vereist)
-        $rawImg = $product->image_url ?? $product->image ?? $product->image_path ?? null;
-        $isFull = is_string($rawImg) && (str_starts_with($rawImg, 'http://') || str_starts_with($rawImg, 'https://'));
-        $imgSrc = $rawImg
-          ? ($isFull ? $rawImg : asset('storage/' . ltrim($rawImg, '/')))
+        // Pak wat er is: image_url > image > image_path
+        $raw = $product->image_url ?? $product->image ?? $product->image_path ?? null;
+        // Is het een absolute URL?
+        $isAbsolute = is_string($raw) && (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://'));
+        // Bepaal src (remote URL of storage)
+        $imgSrc = $raw
+          ? ($isAbsolute ? $raw : asset('storage/' . ltrim($raw, '/')))
           : 'https://placehold.co/600x400?text=Product';
       @endphp
 
       <div class="col">
         <div class="card h-100 shadow-sm border-0">
-          <img src="{{ $imgSrc }}" class="card-img-top" alt="{{ $product->name }}">
+          <img
+            src="{{ $imgSrc }}"
+            alt="{{ $product->name }}"
+            class="card-img-top"
+            style="height:220px;object-fit:cover;"
+            onerror="this.onerror=null;this.src='https://placehold.co/600x400?text=No+Image';"
+          >
 
+          {{-- ... jouw bestaande body / add to cart hier ongewijzigd ... --}}
           <div class="card-body d-flex flex-column">
             <h5 class="card-title mb-1">{{ $product->name }}</h5>
             <p class="text-muted mb-3">€{{ number_format($product->price ?? 0, 2) }}</p>
-
             <p class="text-secondary small mb-3" style="min-height:2.5rem; max-height:2.5rem; overflow:hidden;">
               {{ \Illuminate\Support\Str::limit($product->description, 80) }}
             </p>
 
             <div class="mt-auto d-flex gap-2">
-              {{-- VIEW → opent modal (event-delegation in shop.blade.php) --}}
               <button
                 type="button"
                 class="btn btn-outline-secondary w-50"
@@ -34,11 +41,9 @@
                 data-price="{{ number_format($product->price ?? 0, 2) }}"
                 data-description="{{ trim($product->description) }}"
                 data-image="{{ $imgSrc }}"
-              >
-                View
-              </button>
+              >View</button>
 
-              {{-- Add to cart --}}
+              {{-- jouw Add-form blijft exact zoals je had --}}
               <form method="POST" action="{{ route('cart.add') }}" class="w-50">
                 @csrf
                 <input type="hidden" name="product_id" value="{{ $product->id }}">
@@ -52,5 +57,5 @@
     @endforeach
   </div>
 @else
-  <div class="alert alert-info text-center my-4">Geen producten gevonden.</div>
+  <div class="alert alert-info text-center my-4">No products found.</div>
 @endif

@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="container py-5">
-  <h1 class="fw-bold mb-4">Je winkelwagen</h1>
+  <h1 class="fw-bold mb-4">Your cart</h1>
 
   {{-- Server flash messages (fallback; blijven werken zonder JS) --}}
   @if (session('success'))
@@ -21,8 +21,8 @@
 
   @if (empty($items))
     <div id="cart-empty" class="alert alert-info d-flex align-items-center justify-content-between">
-      <span>Je winkelwagen is leeg.</span>
-      <a href="{{ route('shop') }}" class="btn btn-primary">Verder winkelen</a>
+      <span>Your cart is empty</span>
+      <a href="{{ route('shop') }}" class="btn btn-primary">Continue shopping</a>
     </div>
   @else
     <div id="cart-panel">
@@ -31,9 +31,9 @@
           <thead>
             <tr>
               <th>Product</th>
-              <th class="text-end">Prijs</th>
-              <th style="width:160px;">Aantal</th>
-              <th class="text-end">Subtotaal</th>
+              <th class="text-end">Price</th>
+              <th style="width:160px;">Quantity</th>
+              <th class="text-end">Subtota</th>
               <th style="width:110px;"></th>
             </tr>
           </thead>
@@ -68,17 +68,22 @@
       </div>
 
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mt-3 gap-3">
-        <form action="{{ route('cart.clear') }}" method="POST" class="js-clear">
+        <form action="{{ route('cart.clear') }}" method="POST" onsubmit="return confirm('Winkelwagen legen?')">
           @csrf
-          <button class="btn btn-outline-secondary" type="submit"
-                  onclick="return confirm('Winkelwagen leggen?')">Leeg winkelwagen</button>
+          <button class="btn btn-outline-secondary" type="submit">Leeg winkelwagen</button>
         </form>
 
         <div class="ms-md-auto text-end">
-          <div class="fs-5 fw-bold">Totaal: <span id="cart-total">€{{ number_format($total, 2) }}</span></div>
-          <a href="{{ route('checkout') }}" class="btn btn-primary mt-2">Ga naar checkout</a>
+          <div class="fs-5 fw-bold">Totaal: €{{ number_format($total, 2) }}</div>
+
+          {{-- ⬇️ PLAATS HIER DEZE NIEUWE FORM --}}
+          <form action="{{ route('checkout.start') }}" method="POST" class="mt-2">
+            @csrf
+            <button class="btn btn-primary">Go to checkout</button>
+          </form>
         </div>
       </div>
+
     </div>
   @endif
 
@@ -195,8 +200,8 @@
       const empty = document.createElement('div');
       empty.id = 'cart-empty';
       empty.className = 'alert alert-info d-flex align-items-center justify-content-between';
-      empty.innerHTML = `<span>Je winkelwagen is leeg.</span>
-                         <a href="{{ route('shop') }}" class="btn btn-primary">Verder winkelen</a>`;
+      empty.innerHTML = `<span>Your cart is empty</span>
+                         <a href="{{ route('shop') }}" class="btn btn-primary">Continue shopping</a>`;
       document.querySelector('.container.py-5')?.appendChild(empty);
     }
 
@@ -220,8 +225,8 @@
       empty = document.createElement('div');
       empty.id = 'cart-empty';
       empty.className = 'alert alert-info d-flex align-items-center justify-content-between';
-      empty.innerHTML = `<span>Je winkelwagen is leeg.</span>
-                         <a href="{{ route('shop') }}" class="btn btn-primary">Verder winkelen</a>`;
+      empty.innerHTML = `<span>Your cart is empty</span>
+                         <a href="{{ route('shop') }}" class="btn btn-primary">Continue shopping</a>`;
       document.querySelector('.container.py-5')?.appendChild(empty);
     }
 

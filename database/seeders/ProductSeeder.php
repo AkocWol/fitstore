@@ -74,17 +74,18 @@ class ProductSeeder extends Seeder
 
         foreach ($items as $i => $it) {
             $slug = Str::slug($it['name']);
-            if (Product::where('slug', $slug)->exists()) {
-                $slug .= '-'.($i+1); // fallback bij eventuele dubbele slug
-            }
+            // Bepaal een stabiele, directe (geen 302) image-URL
+            $imageUrl = "https://picsum.photos/seed/{$slug}/600/400";
 
             Product::updateOrCreate(
                 ['slug' => $slug],
                 [
                     'name'        => $it['name'],
+                    'slug'        => $slug,
                     'category'    => $it['category'],
                     'description' => $it['description'],
                     'price'       => $it['price'],
+                    'image'       => $imageUrl,
                 ]
             );
         }
